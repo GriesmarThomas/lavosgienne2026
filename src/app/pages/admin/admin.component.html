@@ -1,0 +1,223 @@
+<main class="admin-screen">
+  <section class="admin-card">
+    <header class="admin-header">
+      <div>
+        <p class="eyebrow">La Vosgienne 2026</p>
+        <h1>Administration</h1>
+      </div>
+      <a class="back-link" routerLink="/">Retour au quiz</a>
+    </header>
+
+    <p *ngIf="isLoading" class="status-message">Chargement…</p>
+
+    <form *ngIf="!isLoading && !isAuthenticated" class="login-form" (ngSubmit)="login()">
+      <p class="subtitle">Connecte-toi pour gérer les questions et les réponses.</p>
+      <label for="admin-username">Identifiant</label>
+      <input id="admin-username" name="username" [(ngModel)]="username" autocomplete="username" required />
+      <label for="admin-password">Mot de passe</label>
+      <input
+        id="admin-password"
+        name="password"
+        type="password"
+        [(ngModel)]="password"
+        autocomplete="current-password"
+        required
+      />
+      <button class="primary-button" type="submit" [disabled]="isSaving || !username || !password">
+        {{ isSaving ? 'Connexion…' : 'Se connecter' }}
+      </button>
+    </form>
+
+    <div *ngIf="isAuthenticated" class="admin-content">
+      <div class="toolbar">
+        <p>{{ questions.length }} question{{ questions.length > 1 ? 's' : '' }}</p>
+        <div class="toolbar-actions">
+          <button type="button" class="secondary-button" (click)="createQuestion()">Ajouter une question</button>
+          <button type="button" class="text-button" (click)="logout()">Déconnexion</button>
+        </div>
+      </div>
+
+      <form *ngIf="isEditorOpen" class="question-form" (ngSubmit)="saveQuestion()">
+        <h2>{{ editingId === null ? 'Nouvelle question' : 'Modifier la question' }}</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="question-category">Catégorie</label>
+            <input id="question-category" name="category" [(ngModel)]="draft.category" required />
+          </div>
+          <div class="field">
+            <label for="question-difficulty">Difficulté</label>
+            <select id="question-difficulty" name="difficulty" [(ngModel)]="draft.difficulty">
+              <option *ngFor="let difficulty of difficulties" [ngValue]="difficulty">{{ difficulty }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="question-type">Type</label>
+            <select id="question-type" name="type" [(ngModel)]="draft.type">
+              <option *ngFor="let type of questionTypes" [ngValue]="type">{{ type }}</option>
+            </select>
+          </div>
+          <div class="field full-width">
+            <label for="question-text">Question</label>
+            <textarea id="question-text" name="question" [(ngModel)]="draft.question" rows="3" required></textarea>
+          </div>
+          <div *ngIf="editingId === null" class="field full-width">
+            <label for="question-photos">Photos de l’énoncé</label>
+            <input
+              id="question-photos"
+              type="file"
+              [accept]="questionImageTypes"
+              multiple
+              (change)="onPhotosSelected($event)"
+            />
+            <p class="field-hint">
+              Jusqu’à {{ maxQuestionImages }} photos JPG, PNG ou WebP, pour {{ maxQuestionImageSizeMegabytes }} Mo au total.
+            </p>
+            <div *ngIf="selectedPhotos.length" class="selected-photo-grid">
+              <div class="selected-photo" *ngFor="let photo of selectedPhotos; index as index">
+                <img [src]="photo.previewUrl" [alt]="'Photo sélectionnée ' + (index + 1)" />
+                <button type="button" class="text-button" (click)="removeSelectedPhoto(index)">Retirer</button>
+              </div>
+            </div>
+            <p *ngIf="photoErrorMessage" class="photo-error" role="alert">{{ photoErrorMessage }}</p>
+          </div>
+          <div *ngIf="editingId !== null && draft.images.length" class="field full-width">
+            <label>Photos existantes (non modifiables)</label>
+            <app-question-images
+              [images]="draft.images"
+              [altText]="draft.question"
+              (lightboxOpenChange)="setQuestionImageOpen($event)"
+            ></app-question-images>
+          </div>
+          <div class="field full-width">
+            <label for="correct-answer">Bonne réponse</label>
+            <input id="correct-answer" name="correctAnswer" [(ngModel)]="draft.correctAnswer" required />
+          </div>
+          <div class="field full-width">
+            <label for="accepted-answers">Autres réponses acceptées (une par ligne)</label>
+            <textarea id="accepted-answers" name="acceptedAnswers" [(ngModel)]="draft.acceptedAnswersText" rows="2"></textarea>
+          </div>
+          <div *ngIf="draft.type === 'qcm'" class="field full-width">
+            <label for="question-choices">Choix proposés (un par ligne)</label>
+            <textarea id="question-choices" name="choices" [(ngModel)]="draft.choicesText" rows="3" required></textarea>
+          </div>
+          <div *ngIf="draft.type === 'image'" class="field full-width">
+            <label for="question-image">URL de l’image</label>
+            <input id="question-image" name="image" [(ngModel)]="draft.image" />
+          </div>
+          <div class="field full-width">
+            <label for="question-anecdote">Anecdote (facultatif)</label>
+            <textarea id="question-anecdote" name="anecdote" [(ngModel)]="draft.anecdote" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary-button" [disabled]="isSaving || !!photoErrorMessage">
+            {{ isSaving ? 'Enregistrement…' : 'Enregistrer' }}
+          </button>
+          <button type="button" class="text-button" (click)="cancelEditing()">Annuler</button>
+        </div>
+      </form>
+
+      <div class="list-heading">
+        <h2>Questions</h2>
+        <input
+          class="search-input"
+          type="search"
+          aria-label="Rechercher une question"
+          placeholder="Rechercher…"
+          [(ngModel)]="searchTerm"
+          name="search"
+        />
+      </div>
+      <div class="question-list">
+        <article class="question-item" *ngFor="let question of filteredQuestions">
+          <div class="question-copy">
+            <div class="question-meta">
+              <span>{{ question.category }}</span>
+              <span>{{ question.difficulty }}</span>
+              <span>{{ question.type }}</span>
+            </div>
+            <h3>{{ question.question }}</h3>
+            <p><strong>Réponse :</strong> {{ question.correctAnswer }}</p>
+          </div>
+          <div class="item-actions">
+            <button type="button" class="text-button" (click)="openPreview(question)">Aperçu</button>
+            <button type="button" class="text-button" (click)="editQuestion(question)">Modifier</button>
+            <button type="button" class="danger-button" (click)="deleteQuestion(question)">Supprimer</button>
+          </div>
+        </article>
+        <p *ngIf="!filteredQuestions.length" class="status-message">Aucune question à afficher.</p>
+      </div>
+
+    </div>
+
+    <p *ngIf="errorMessage" class="feedback error" role="alert">{{ errorMessage }}</p>
+    <p *ngIf="successMessage" class="feedback success" role="status">{{ successMessage }}</p>
+  </section>
+
+  <div
+    *ngIf="previewingQuestion as question"
+    class="preview-overlay"
+    (click)="closePreview()"
+  >
+    <section
+      class="preview-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="preview-dialog-title"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="preview-dialog-header">
+        <h2 id="preview-dialog-title">Aperçu de la question</h2>
+        <button
+          type="button"
+          class="text-button"
+          aria-label="Fermer l’aperçu"
+          (click)="closePreview()"
+        >
+          Fermer
+        </button>
+      </header>
+
+      <div class="preview-quiz-card">
+        <div class="preview-top-bar">
+          <span class="preview-progress">Question 1 / 1</span>
+          <div class="preview-meta-row">
+            <span class="preview-meta-pill">{{ question.category }}</span>
+            <span class="preview-meta-pill">{{ question.difficulty }}</span>
+          </div>
+        </div>
+
+        <h3 class="preview-question-text">{{ question.question }}</h3>
+
+        <div *ngIf="question.type === 'open' || question.type === 'image'" class="preview-answer-box">
+          <label for="preview-answer-input">Ta réponse</label>
+          <input
+            id="preview-answer-input"
+            type="text"
+            placeholder="Écris ta réponse..."
+            disabled
+          />
+        </div>
+
+        <div *ngIf="question.type === 'qcm'" class="preview-choice-list">
+          <div class="preview-choice-button" *ngFor="let choice of question.choices ?? []">
+            {{ choice }}
+          </div>
+        </div>
+
+        <app-question-images
+          *ngIf="previewImages.length"
+          [images]="previewImages"
+          [altText]="question.question"
+          (lightboxOpenChange)="setQuestionImageOpen($event)"
+        ></app-question-images>
+
+        <div *ngIf="question.type === 'image' && !previewImages.length" class="preview-image-placeholder">
+          Image à venir
+        </div>
+
+        <button type="button" class="preview-validate-button" disabled>Valider</button>
+      </div>
+    </section>
+  </div>
+</main>

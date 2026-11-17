@@ -1,6 +1,7 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { Question, QuizDifficulty } from '../models/question.model';
-import questionsData from '../../../assets/questions/questions.json';
 import { Punishment, PunishmentService } from './punishment.service';
 
 export interface QuizSession {
@@ -25,9 +26,11 @@ export interface QuizResult {
 export class QuizService {
   private readonly sessionKey = 'la-vosgienne-session';
   private readonly configKey = 'la-vosgienne-config';
-  private readonly questions: Question[] = Array.isArray(questionsData) ? (questionsData as Question[]) : [];
 
-  constructor(private readonly punishmentService: PunishmentService) {}
+  constructor(
+    private readonly punishmentService: PunishmentService,
+    private readonly http: HttpClient
+  ) {}
 
   getAvailableDifficulties(): Array<QuizDifficulty> {
     return ['random', 'easy', 'medium', 'hard'];
@@ -39,12 +42,13 @@ export class QuizService {
 
   getSavedConfig(): { difficulty: QuizDifficulty; questionCount: number } {
     const defaultValue = { difficulty: 'random' as QuizDifficulty, questionCount: 5 };
+    const storage = this.getStorage();
 
-    if (typeof localStorage === 'undefined') {
+    if (!storage) {
       return defaultValue;
     }
 
-    const rawValue = localStorage.getItem(this.configKey);
+    const rawValue = storage.getItem(this.configKey);
 
     if (!rawValue) {
       return defaultValue;
@@ -52,21 +56,40 @@ export class QuizService {
 
     try {
       const parsed = JSON.parse(rawValue) as Partial<{ difficulty: QuizDifficulty; questionCount: number }>;
-      return {
-        difficulty: parsed.difficulty ?? defaultValue.difficulty,
-        questionCount: parsed.questionCount ?? defaultValue.questionCount
-      };
+      const difficulty = this.isValidDifficulty(parsed.difficulty) ? parsed.difficulty : defaultValue.difficulty;
+      const validQuestionCount = this.getQuestionCountOptions();
+      const questionCount = typeof parsed.questionCount === 'number' && validQuestionCount.includes(parsed.questionCount)
+        ? parsed.questionCount
+        : defaultValue.questionCount;
+
+      return { difficulty, questionCount };
     } catch {
       return defaultValue;
     }
   }
 
   saveConfig(difficulty: QuizDifficulty, questionCount: number): void {
-    localStorage.setItem(this.configKey, JSON.stringify({ difficulty, questionCount }));
+    const storage = this.getStorage();
+    if (!storage) {
+      return;
+    }
+
+    const safeDifficulty = this.isValidDifficulty(difficulty) ? difficulty : 'random';
+    const validQuestionCount = this.getQuestionCountOptions();
+    const safeQuestionCount = validQuestionCount.includes(questionCount)
+      ? questionCount
+      : validQuestionCount[0];
+
+    this.writeJson(storage, this.configKey, { difficulty: safeDifficulty, questionCount: safeQuestionCount });
   }
 
-  startSession(difficulty: QuizDifficulty, count: number): Question[] {
-    const sessionQuestions = this.buildQuestionSet(difficulty, count);
+  async startSession(difficulty: QuizDifficulty, count: number): Promise<Question[]> {
+    const questions = await firstValueFrom(this.http.get<Question[]>('/api/questions'));
+    if (!Array.isArray(questions)) {
+      throw new Error('La banque de questions reçue est invalide.');
+    }
+
+    const sessionQuestions = this.buildQuestionSet(questions, difficulty, count);
     const session: QuizSession = {
       questions: sessionQuestions,
       currentIndex: 0,
@@ -75,7 +98,7 @@ export class QuizService {
       lastResult: undefined
     };
 
-    localStorage.setItem(this.sessionKey, JSON.stringify(session));
+    this.writeJson(this.getStorage(), this.sessionKey, session);
     return sessionQuestions;
   }
 
@@ -87,18 +110,26 @@ export class QuizService {
       count: 0
     };
 
-    if (typeof localStorage === 'undefined') {
+    const storage = this.getStorage();
+    if (!storage) {
       return defaultSession;
     }
 
-    const rawValue = localStorage.getItem(this.sessionKey);
+    const rawValue = storage.getItem(this.sessionKey);
 
     if (!rawValue) {
       return defaultSession;
     }
 
     try {
-      return JSON.parse(rawValue) as QuizSession;
+      const parsed = JSON.parse(rawValue) as QuizSession;
+      return {
+        ...defaultSession,
+        ...parsed,
+        questions: Array.isArray(parsed.questions) ? parsed.questions : defaultSession.questions,
+        currentIndex: Number.isFinite(parsed.currentIndex) ? parsed.currentIndex : defaultSession.currentIndex,
+        count: Number.isFinite(parsed.count) ? parsed.count : parsed.questions?.length ?? defaultSession.count
+      };
     } catch {
       return defaultSession;
     }
@@ -142,7 +173,7 @@ export class QuizService {
     };
 
     session.lastResult = result;
-    localStorage.setItem(this.sessionKey, JSON.stringify(session));
+    this.writeJson(this.getStorage(), this.sessionKey, session);
     return result;
   }
 
@@ -154,7 +185,7 @@ export class QuizService {
     }
 
     session.currentIndex += 1;
-    localStorage.setItem(this.sessionKey, JSON.stringify(session));
+    this.writeJson(this.getStorage(), this.sessionKey, session);
     return session.questions[session.currentIndex];
   }
 
@@ -164,17 +195,27 @@ export class QuizService {
   }
 
   clearSession(): void {
-    localStorage.removeItem(this.sessionKey);
+    const storage = this.getStorage();
+    if (!storage) {
+      return;
+    }
+
+    try {
+      storage.removeItem(this.sessionKey);
+    } catch {
+      // ignore browser storage restrictions
+    }
   }
 
-  private buildQuestionSet(difficulty: QuizDifficulty, count: number): Question[] {
+  private buildQuestionSet(questions: Question[], difficulty: QuizDifficulty, count: number): Question[] {
     const filteredQuestions =
       difficulty === 'random'
-        ? [...this.questions]
-        : this.questions.filter((question) => question.difficulty === difficulty);
+        ? [...questions]
+        : questions.filter((question) => question.difficulty === difficulty);
 
     const shuffledQuestions = [...filteredQuestions].sort(() => Math.random() - 0.5);
-    return shuffledQuestions.slice(0, Math.min(count, shuffledQuestions.length));
+    const safeCount = Number.isFinite(count) ? Math.max(1, count) : 1;
+    return shuffledQuestions.slice(0, Math.min(safeCount, shuffledQuestions.length));
   }
 
   private normalize(value: string): string {
@@ -184,5 +225,36 @@ export class QuizService {
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]/g, '');
+  }
+
+  private getStorage(): Storage | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+
+    try {
+      const storageTestKey = '__la_vosgienne_storage_test__';
+      localStorage.setItem(storageTestKey, storageTestKey);
+      localStorage.removeItem(storageTestKey);
+      return localStorage;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeJson(storage: Storage | null, key: string, value: unknown): void {
+    if (!storage) {
+      return;
+    }
+
+    try {
+      storage.setItem(key, JSON.stringify(value));
+    } catch {
+      // ignore browser storage restrictions
+    }
+  }
+
+  private isValidDifficulty(difficulty: QuizDifficulty | undefined): difficulty is QuizDifficulty {
+    return this.getAvailableDifficulties().includes(difficulty as QuizDifficulty);
   }
 }

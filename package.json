@@ -2,6 +2,7 @@
   "name": "la-vosgienne",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "start": "ng serve",
     "build": "ng build"
@@ -15,6 +16,7 @@
     "@angular/platform-browser": "20.3.35",
     "@angular/platform-browser-dynamic": "20.3.35",
     "@angular/router": "20.3.35",
+    "@vercel/blob": "^2.9.0",
     "rxjs": "^7.8.0",
     "tslib": "^2.6.3",
     "zone.js": "^0.15.0"
@@ -23,6 +25,7 @@
     "@angular-devkit/build-angular": "20.3.43",
     "@angular/cli": "20.3.35",
     "@angular/compiler-cli": "20.3.35",
+    "@vercel/node": "^31.0.1",
     "typescript": "~5.8.3"
   }
 }

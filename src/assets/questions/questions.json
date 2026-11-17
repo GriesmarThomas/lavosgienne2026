@@ -86,6 +86,7 @@
     "type": "open",
     "question": "Où et quand cette photo a-t-elle été prise ?",
     "correctAnswer": "Mars 2014, après s'être fait refouler de l'Exile",
+    "images": ["/assets/questions/photos/question-11.jpg"],
     "anecdote": "La vengeance contre Sagna est attestée par un e-mail du 18/03/2014."
   },
   {
@@ -94,7 +95,8 @@
     "difficulty": "medium",
     "type": "open",
     "question": "De quand date cette photo ?",
-    "correctAnswer": "22/02/2014"
+    "correctAnswer": "22/02/2014",
+    "images": ["/assets/questions/photos/question-12.jpg"]
   },
   {
     "id": 13,
@@ -102,7 +104,11 @@
     "difficulty": "medium",
     "type": "open",
     "question": "De quand date cette photo ?",
-    "correctAnswer": "Décembre 2013"
+    "correctAnswer": "Décembre 2013",
+    "images": [
+      "/assets/questions/photos/question-13-1.jpg",
+      "/assets/questions/photos/question-13-2.jpg"
+    ]
   },
   {
     "id": 14,
@@ -134,7 +140,8 @@
     "difficulty": "easy",
     "type": "open",
     "question": "Où cette photo a-t-elle été prise ?",
-    "correctAnswer": "Boston"
+    "correctAnswer": "Boston",
+    "images": ["/assets/questions/photos/question-17.jpg"]
   },
   {
     "id": 18,
@@ -199,6 +206,7 @@
     "difficulty": "medium",
     "type": "open",
     "question": "Où cette photo a-t-elle été prise ?",
-    "correctAnswer": "Rodern 2013"
+    "correctAnswer": "Rodern 2013",
+    "images": ["/assets/questions/photos/question-26.jpg"]
   }
 ]

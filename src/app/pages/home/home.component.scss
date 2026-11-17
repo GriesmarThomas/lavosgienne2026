@@ -113,3 +113,28 @@ label {
   cursor: pointer;
   box-shadow: 0 12px 30px rgba(245, 158, 11, 0.35);
 }
+
+.cta-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.error-message {
+  margin: 0.75rem 0 0;
+  color: #fecaca;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.admin-link {
+  display: block;
+  width: fit-content;
+  margin: 1rem auto 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.admin-link:hover {
+  color: var(--primary);
+}

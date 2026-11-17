@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { APP_TITLE, QuizDifficulty } from '../../core/models/question.model';
 import { QuizService } from '../../core/services/quiz.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -19,6 +19,8 @@ export class HomeComponent {
 
   selectedDifficulty: QuizDifficulty = this.quizService.getSavedConfig().difficulty;
   questionCount = this.quizService.getSavedConfig().questionCount;
+  isStarting = false;
+  errorMessage = '';
 
   constructor(
     private readonly quizService: QuizService,
@@ -38,9 +40,24 @@ export class HomeComponent {
     this.questionCount = Math.min(maxQuestionCount, this.questionCount + 1);
   }
 
-  startGame(): void {
+  async startGame(): Promise<void> {
+    this.isStarting = true;
+    this.errorMessage = '';
     this.quizService.saveConfig(this.selectedDifficulty, this.questionCount);
-    this.quizService.startSession(this.selectedDifficulty, this.questionCount);
-    this.router.navigate(['/quiz']);
+
+    try {
+      const questions = await this.quizService.startSession(this.selectedDifficulty, this.questionCount);
+      if (!questions.length) {
+        this.errorMessage = 'Aucune question disponible pour cette difficulté.';
+        return;
+      }
+
+      await this.router.navigate(['/quiz']);
+    } catch (error) {
+      console.error('Unable to start quiz session:', error);
+      this.errorMessage = 'Impossible de charger les questions. Réessaie dans un instant.';
+    } finally {
+      this.isStarting = false;
+    }
   }
 }

@@ -9,6 +9,11 @@
     </div>
 
     <h2>{{ question.question }}</h2>
+    <app-question-images
+      *ngIf="questionImages.length"
+      [images]="questionImages"
+      [altText]="question.question"
+    ></app-question-images>
 
     <div *ngIf="question.type === 'open' || question.type === 'image'" class="answer-box">
       <label for="answer-input">Ta réponse</label>
@@ -32,9 +37,8 @@
       </button>
     </div>
 
-    <div *ngIf="question.type === 'image'" class="image-area">
-      <img *ngIf="question.image" [src]="question.image" [alt]="question.question" />
-      <div class="image-placeholder" *ngIf="!question.image">Image à venir</div>
+    <div *ngIf="question.type === 'image' && !questionImages.length" class="image-placeholder">
+      Image à venir
     </div>
 
     <button type="button" class="validate-button" (click)="submitAnswer()" [disabled]="!selectedAnswer.trim()">

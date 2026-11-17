@@ -28,6 +28,10 @@
       </div>
     </div>
 
-    <button type="button" class="cta-button" (click)="startGame()">Commencer</button>
+    <button type="button" class="cta-button" (click)="startGame()" [disabled]="isStarting">
+      {{ isStarting ? 'Chargement…' : 'Commencer' }}
+    </button>
+    <p *ngIf="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p>
+    <a class="admin-link" routerLink="/admin">Administration</a>
   </div>
 </section>

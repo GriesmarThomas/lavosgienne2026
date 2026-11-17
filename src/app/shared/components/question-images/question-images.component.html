@@ -1,0 +1,35 @@
+<div class="photo-gallery" *ngIf="images.length">
+  <button
+    type="button"
+    class="photo-thumbnail"
+    *ngFor="let image of images; index as index"
+    [attr.aria-label]="'Afficher la photo ' + (index + 1) + ' en grand'"
+    (click)="openImage(image)"
+  >
+    <img [src]="image" [alt]="altText + ' ' + (index + 1)" />
+  </button>
+</div>
+
+<div
+  *ngIf="openedImage as image"
+  class="image-lightbox"
+  (click)="closeImage(); $event.stopPropagation()"
+>
+  <section
+    class="image-lightbox-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Photo agrandie"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      type="button"
+      class="image-lightbox-close"
+      aria-label="Fermer la photo agrandie"
+      (click)="closeImage()"
+    >
+      Fermer
+    </button>
+    <img class="full-size-photo" [src]="image" [alt]="altText" />
+  </section>
+</div>
