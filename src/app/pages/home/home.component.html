@@ -1,0 +1,33 @@
+<section class="home-screen">
+  <div class="home-card">
+    <p class="eyebrow">Soirée souvenirs</p>
+    <h1>{{ appTitle }}</h1>
+    <p class="subtitle">Des souvenirs, des schlouks et des sauces</p>
+
+    <div class="field-group">
+      <label for="difficulty">Difficulté</label>
+      <div class="chip-row" id="difficulty">
+        <button
+          type="button"
+          *ngFor="let option of difficultyOptions"
+          class="chip"
+          [class.active]="selectedDifficulty === option"
+          (click)="selectedDifficulty = option"
+        >
+          {{ option === 'random' ? 'Aléatoire' : option }}
+        </button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Nombre de questions</label>
+      <div class="counter" aria-label="Nombre de questions">
+        <button type="button" (click)="decrementQuestionCount()">−</button>
+        <span>{{ questionCount }}</span>
+        <button type="button" (click)="incrementQuestionCount()">+</button>
+      </div>
+    </div>
+
+    <button type="button" class="cta-button" (click)="startGame()">Commencer</button>
+  </div>
+</section>

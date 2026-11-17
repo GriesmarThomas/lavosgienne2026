@@ -1,0 +1,80 @@
+.result-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.result-card {
+  width: min(100%, 460px);
+  background: rgba(15, 23, 42, 0.82);
+  border: 1px solid var(--card-border);
+  border-radius: 28px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.8rem, 7vw, 2.25rem);
+  line-height: 1.2;
+}
+
+.result-box {
+  background: rgba(148, 163, 184, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.result-box p {
+  margin: 0.4rem 0;
+}
+
+.punishment-box {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  margin-top: 1rem;
+}
+
+.punishment-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.15);
+  font-size: 1.5rem;
+}
+
+.punishment-box p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.primary-button {
+  margin-top: 1.5rem;
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+  color: #111827;
+  font-weight: 800;
+  padding: 1rem;
+  cursor: pointer;
+}

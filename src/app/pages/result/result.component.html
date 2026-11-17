@@ -1,0 +1,26 @@
+<section class="result-screen" *ngIf="result as currentResult">
+  <div class="result-card">
+    <p class="eyebrow">{{ isFinalScreen ? 'Fin de partie' : 'Résultat' }}</p>
+
+    <h2 *ngIf="isFinalScreen">Quiz terminé</h2>
+    <h2 *ngIf="!isFinalScreen && currentResult.isCorrect">✅ Bonne réponse</h2>
+    <h2 *ngIf="!isFinalScreen && !currentResult.isCorrect">❌ Mauvaise réponse</h2>
+
+    <div class="result-box">
+      <p><strong>Bonne réponse :</strong> {{ currentResult.question.correctAnswer }}</p>
+      <p *ngIf="currentResult.question.anecdote"><strong>Anecdote :</strong> {{ currentResult.question.anecdote }}</p>
+    </div>
+
+    <div *ngIf="!currentResult.isCorrect && currentResult.punishment" class="punishment-box">
+      <div class="punishment-icon">{{ currentResult.punishment.emoji }}</div>
+      <div>
+        <strong>Gage</strong>
+        <p>{{ currentResult.punishment.label }}</p>
+      </div>
+    </div>
+
+    <button type="button" class="primary-button" (click)="continue()">
+      {{ isFinalScreen ? 'Rejouer' : 'Question suivante' }}
+    </button>
+  </div>
+</section>

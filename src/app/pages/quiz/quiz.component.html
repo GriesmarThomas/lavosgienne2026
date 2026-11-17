@@ -1,0 +1,44 @@
+<section class="quiz-screen" *ngIf="currentQuestion as question">
+  <div class="quiz-card">
+    <div class="top-bar">
+      <span class="progress">Question {{ currentIndex + 1 }} / {{ totalQuestions }}</span>
+      <div class="meta-row">
+        <span class="meta-pill">{{ question.category }}</span>
+        <span class="meta-pill">{{ question.difficulty }}</span>
+      </div>
+    </div>
+
+    <h2>{{ question.question }}</h2>
+
+    <div *ngIf="question.type === 'open' || question.type === 'image'" class="answer-box">
+      <label for="answer-input">Ta réponse</label>
+      <input
+        id="answer-input"
+        type="text"
+        [(ngModel)]="selectedAnswer"
+        placeholder="Écris ta réponse..."
+      />
+    </div>
+
+    <div *ngIf="question.type === 'qcm'" class="choice-list">
+      <button
+        type="button"
+        class="choice-button"
+        *ngFor="let choice of question.choices ?? []"
+        [class.selected]="selectedAnswer === choice"
+        (click)="selectedAnswer = choice"
+      >
+        {{ choice }}
+      </button>
+    </div>
+
+    <div *ngIf="question.type === 'image'" class="image-area">
+      <img *ngIf="question.image" [src]="question.image" [alt]="question.question" />
+      <div class="image-placeholder" *ngIf="!question.image">Image à venir</div>
+    </div>
+
+    <button type="button" class="validate-button" (click)="submitAnswer()" [disabled]="!selectedAnswer.trim()">
+      Valider
+    </button>
+  </div>
+</section>
