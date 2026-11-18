@@ -22,7 +22,18 @@
     </div>
 
     <div class="field-group">
-      <label>Catégorie</label>
+      <div class="category-heading">
+        <label>Catégorie</label>
+        <button
+          *ngIf="categoryOptions.length > initialCategoryLimit"
+          type="button"
+          class="category-toggle"
+          [attr.aria-expanded]="showAllCategories"
+          (click)="showAllCategories = !showAllCategories"
+        >
+          {{ showAllCategories ? 'Voir moins' : 'Voir tout (+' + hiddenCategoryCount + ')' }}
+        </button>
+      </div>
       <div class="chip-row category-options" role="group" aria-label="Catégorie">
         <button
           type="button"
@@ -36,14 +47,15 @@
         </button>
         <button
           type="button"
-          *ngFor="let category of categoryOptions"
+          *ngFor="let category of visibleCategoryOptions"
           class="chip category-chip"
-          [class.active]="selectedCategory === category"
-          [attr.aria-pressed]="selectedCategory === category"
-          (click)="selectedCategory = category"
+          [class.active]="selectedCategory === category.name"
+          [attr.aria-pressed]="selectedCategory === category.name"
+          (click)="selectedCategory = category.name"
         >
-          <span aria-hidden="true">{{ getCategoryIcon(category) }}</span>
-          {{ category }}
+          <span aria-hidden="true">{{ getCategoryIcon(category.name) }}</span>
+          {{ category.name }}
+          <span class="category-count">{{ category.count }}</span>
         </button>
       </div>
       <p *ngIf="isLoadingCategories" class="field-hint">Chargement des catégories…</p>
@@ -63,6 +75,9 @@
       {{ isStarting ? 'Chargement…' : 'Commencer' }}
     </button>
     <p *ngIf="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p>
-    <a class="admin-link" routerLink="/admin">Administration</a>
+    <a class="admin-link" routerLink="/admin">
+      <span aria-hidden="true">⚙️</span>
+      Administration
+    </a>
   </div>
 </section>

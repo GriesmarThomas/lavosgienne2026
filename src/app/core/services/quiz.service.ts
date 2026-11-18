@@ -1,7 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { normalizeAnswer, Question, QuizDifficulty } from '../models/question.model';
+import {
+  getCategoryKey,
+  normalizeAnswer,
+  Question,
+  QuestionCategory,
+  QuizDifficulty,
+  resolveCategoryName
+} from '../models/question.model';
 import { Punishment, PunishmentService } from './punishment.service';
 
 export interface QuizSession {
@@ -62,7 +69,7 @@ export class QuizService {
       }>;
       const difficulty = this.isValidDifficulty(parsed.difficulty) ? parsed.difficulty : defaultValue.difficulty;
       const category = typeof parsed.category === 'string' && parsed.category.trim()
-        ? parsed.category.trim()
+        ? resolveCategoryName(parsed.category)
         : null;
       const validQuestionCount = this.getQuestionCountOptions();
       const questionCount = typeof parsed.questionCount === 'number' && validQuestionCount.includes(parsed.questionCount)
@@ -86,7 +93,9 @@ export class QuizService {
     const safeQuestionCount = validQuestionCount.includes(questionCount)
       ? questionCount
       : validQuestionCount[0];
-    const safeCategory = typeof category === 'string' && category.trim() ? category.trim() : null;
+    const safeCategory = typeof category === 'string' && category.trim()
+      ? resolveCategoryName(category)
+      : null;
 
     this.writeJson(storage, this.configKey, {
       difficulty: safeDifficulty,
@@ -95,14 +104,40 @@ export class QuizService {
     });
   }
 
-  async getAvailableCategories(): Promise<string[]> {
+  async getAvailableCategories(): Promise<QuestionCategory[]> {
     const questions = await firstValueFrom(this.http.get<Question[]>('/api/questions'));
     if (!Array.isArray(questions)) {
       throw new Error('La banque de questions reçue est invalide.');
     }
 
-    return [...new Set(questions.map((question) => question.category.trim()).filter(Boolean))]
-      .sort((left, right) => left.localeCompare(right, 'fr'));
+    const groups = new Map<string, { count: number; names: Map<string, number> }>();
+    for (const question of questions) {
+      const name = question.category.trim().replace(/\s+/g, ' ');
+      if (!name) {
+        continue;
+      }
+
+      const key = getCategoryKey(name);
+      const group = groups.get(key) ?? { count: 0, names: new Map<string, number>() };
+      group.count += 1;
+      group.names.set(name, (group.names.get(name) ?? 0) + 1);
+      groups.set(key, group);
+    }
+
+    return [...groups.entries()]
+      .map(([key, group]) => ({
+        key,
+        name: key === 'soirees'
+          ? 'Soirées'
+          : [...group.names.entries()]
+              .sort(([leftName, leftCount], [rightName, rightCount]) =>
+                rightCount - leftCount ||
+                leftName.localeCompare(rightName, 'fr', { sensitivity: 'base' }) ||
+                leftName.localeCompare(rightName, 'fr')
+              )[0][0],
+        count: group.count
+      }))
+      .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name, 'fr'));
   }
 
   async startSession(difficulty: QuizDifficulty, count: number, category: string | null = null): Promise<Question[]> {
@@ -236,7 +271,7 @@ export class QuizService {
     category: string | null
   ): Question[] {
     const categoryQuestions = category
-      ? questions.filter((question) => question.category === category)
+      ? questions.filter((question) => getCategoryKey(question.category) === getCategoryKey(category))
       : questions;
     const filteredQuestions = difficulty === 'random'
       ? [...categoryQuestions]

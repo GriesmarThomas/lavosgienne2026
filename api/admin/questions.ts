@@ -16,6 +16,7 @@ import {
 } from '../../server/question-images.js';
 import {
   hasExactlyOneCorrectChoice,
+  resolveCategoryName,
   type Question
 } from '../../src/app/core/models/question.model.js';
 
@@ -66,6 +67,10 @@ export default async function handler(
       if (!question || !hasExactlyOneCorrectChoice(question)) {
         return response.status(400).json({ error: 'Les champs de la question sont invalides.' });
       }
+      question.category = resolveCategoryName(
+        question.category,
+        bank.questions.map((existingQuestion) => existingQuestion.category)
+      );
 
       const uploadedImages = await uploadQuestionImages(photoUploads);
       if (uploadedImages.urls.length) {
@@ -95,6 +100,12 @@ export default async function handler(
       if (!question || !hasExactlyOneCorrectChoice(question)) {
         return response.status(400).json({ error: 'Les champs de la question sont invalides.' });
       }
+      question.category = resolveCategoryName(
+        question.category,
+        bank.questions
+          .filter((existingQuestion) => existingQuestion.id !== question.id)
+          .map((existingQuestion) => existingQuestion.category)
+      );
 
       const questionIndex = bank.questions.findIndex((item) => item.id === question.id);
       if (questionIndex < 0) {

@@ -2,7 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { APP_TITLE, getCategoryIcon, QuizDifficulty } from '../../core/models/question.model';
+import {
+  APP_TITLE,
+  getCategoryIcon,
+  getCategoryKey,
+  QuestionCategory,
+  QuizDifficulty
+} from '../../core/models/question.model';
 import { QuizService } from '../../core/services/quiz.service';
 
 @Component({
@@ -13,6 +19,7 @@ import { QuizService } from '../../core/services/quiz.service';
   styleUrl: './home.component.scss'
 })
 export class HomeComponent implements OnInit {
+  readonly initialCategoryLimit = 5;
   readonly appTitle = APP_TITLE;
   readonly getCategoryIcon = getCategoryIcon;
   readonly difficultyOptions: Array<QuizDifficulty> = this.quizService.getAvailableDifficulties();
@@ -21,11 +28,31 @@ export class HomeComponent implements OnInit {
   selectedDifficulty: QuizDifficulty = this.quizService.getSavedConfig().difficulty;
   selectedCategory: string | null = this.quizService.getSavedConfig().category;
   questionCount = this.quizService.getSavedConfig().questionCount;
-  categoryOptions: string[] = [];
+  categoryOptions: QuestionCategory[] = [];
+  showAllCategories = false;
   isLoadingCategories = true;
   categoryErrorMessage = '';
   isStarting = false;
   errorMessage = '';
+
+  get visibleCategoryOptions(): QuestionCategory[] {
+    if (this.showAllCategories || this.categoryOptions.length <= this.initialCategoryLimit) {
+      return this.categoryOptions;
+    }
+
+    const visibleCategories = this.categoryOptions.slice(0, this.initialCategoryLimit);
+    const selectedCategory = this.categoryOptions.find(
+      (category) => category.key === getCategoryKey(this.selectedCategory ?? '')
+    );
+
+    return selectedCategory && !visibleCategories.some((category) => category.key === selectedCategory.key)
+      ? [...visibleCategories, selectedCategory]
+      : visibleCategories;
+  }
+
+  get hiddenCategoryCount(): number {
+    return Math.max(0, this.categoryOptions.length - this.visibleCategoryOptions.length);
+  }
 
   constructor(
     private readonly quizService: QuizService,
@@ -81,8 +108,10 @@ export class HomeComponent implements OnInit {
   private async loadCategories(): Promise<void> {
     try {
       this.categoryOptions = await this.quizService.getAvailableCategories();
-      if (this.selectedCategory && !this.categoryOptions.includes(this.selectedCategory)) {
-        this.selectedCategory = null;
+      if (this.selectedCategory) {
+        this.selectedCategory = this.categoryOptions.find(
+          (category) => category.key === getCategoryKey(this.selectedCategory ?? '')
+        )?.name ?? null;
       }
     } catch (error) {
       console.error('Unable to load question categories:', error);

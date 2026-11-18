@@ -5,6 +5,12 @@ export type QuizDifficulty = QuestionDifficulty | 'random';
 export const MAX_QUESTION_IMAGES = 8;
 export const MAX_QUESTION_IMAGE_BYTES = 3 * 1024 * 1024;
 
+export interface QuestionCategory {
+  key: string;
+  name: string;
+  count: number;
+}
+
 const CATEGORY_ICONS: Record<string, string> = {
   cinema: '🎬',
   festivals: '🎪',
@@ -33,13 +39,32 @@ export interface Question {
 }
 
 export function getCategoryIcon(category: string): string {
+  return CATEGORY_ICONS[getCategoryKey(category)] ?? '🏷️';
+}
+
+export function getCategoryKey(category: string): string {
   const normalizedCategory = category
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim()
-    .toLocaleLowerCase();
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('fr');
 
-  return CATEGORY_ICONS[normalizedCategory] ?? '🏷️';
+  return normalizedCategory === 'soiree' || normalizedCategory === 'soirees'
+    ? 'soirees'
+    : normalizedCategory;
+}
+
+export function resolveCategoryName(category: string, existingCategories: readonly string[] = []): string {
+  const cleanedCategory = category.trim().replace(/\s+/g, ' ');
+  const categoryKey = getCategoryKey(cleanedCategory);
+
+  if (categoryKey === 'soirees') {
+    return 'Soirées';
+  }
+
+  const existingCategory = existingCategories.find((existing) => getCategoryKey(existing) === categoryKey);
+  return existingCategory ? existingCategory.trim().replace(/\s+/g, ' ') : cleanedCategory;
 }
 
 export function normalizeAnswer(value: string): string {
