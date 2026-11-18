@@ -16,7 +16,7 @@
           [attr.aria-pressed]="selectedDifficulty === option"
           (click)="selectedDifficulty = option"
         >
-          {{ option === 'random' ? 'Aléatoire' : option }}
+          {{ getDifficultyLabel(option) }}
         </button>
       </div>
     </div>

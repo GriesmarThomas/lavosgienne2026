@@ -2,6 +2,13 @@ export type QuestionDifficulty = 'easy' | 'medium' | 'hard';
 export type QuestionType = 'open' | 'qcm' | 'image';
 export type QuizDifficulty = QuestionDifficulty | 'random';
 
+const DIFFICULTY_LABELS: Record<QuizDifficulty, string> = {
+  easy: 'Facile',
+  medium: 'Moyen',
+  hard: 'Difficile',
+  random: 'Aléatoire'
+};
+
 export const MAX_QUESTION_IMAGES = 8;
 export const MAX_QUESTION_IMAGE_BYTES = 3 * 1024 * 1024;
 
@@ -36,6 +43,10 @@ export interface Question {
   images?: string[];
   image?: string;
   anecdote?: string;
+}
+
+export function getDifficultyLabel(difficulty: QuizDifficulty): string {
+  return DIFFICULTY_LABELS[difficulty];
 }
 
 export function getCategoryIcon(category: string): string {

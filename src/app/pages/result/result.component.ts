@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { getCategoryIcon } from '../../core/models/question.model';
+import { getCategoryIcon, getDifficultyLabel } from '../../core/models/question.model';
 import { QuizResult, QuizService } from '../../core/services/quiz.service';
 
 @Component({
@@ -13,8 +13,10 @@ import { QuizResult, QuizService } from '../../core/services/quiz.service';
 })
 export class ResultComponent implements OnInit {
   readonly getCategoryIcon = getCategoryIcon;
+  readonly getDifficultyLabel = getDifficultyLabel;
   result: QuizResult | null = null;
   isFinalScreen = false;
+  sessionScore = { correct: 0, incorrect: 0 };
 
   constructor(
     private readonly quizService: QuizService,
@@ -31,6 +33,9 @@ export class ResultComponent implements OnInit {
 
     this.result = lastResult;
     this.isFinalScreen = lastResult.isComplete;
+    if (this.isFinalScreen) {
+      this.sessionScore = this.quizService.getSessionScore();
+    }
   }
 
   continue(): void {

@@ -50,7 +50,9 @@
           <div class="field">
             <label for="question-difficulty">Difficulté</label>
             <select id="question-difficulty" name="difficulty" [(ngModel)]="draft.difficulty">
-              <option *ngFor="let difficulty of difficulties" [ngValue]="difficulty">{{ difficulty }}</option>
+              <option *ngFor="let difficulty of difficulties" [ngValue]="difficulty">
+                {{ getDifficultyLabel(difficulty) }}
+              </option>
             </select>
           </div>
           <div class="field">
@@ -170,7 +172,7 @@
                 class="difficulty-badge"
                 [ngClass]="'difficulty-' + question.difficulty"
               >
-                {{ question.difficulty }}
+                {{ getDifficultyLabel(question.difficulty) }}
               </span>
               <span>{{ question.type }}</span>
             </div>
@@ -226,7 +228,7 @@
               class="preview-meta-pill difficulty-badge"
               [ngClass]="'difficulty-' + question.difficulty"
             >
-              {{ question.difficulty }}
+              {{ getDifficultyLabel(question.difficulty) }}
             </span>
           </div>
         </div>

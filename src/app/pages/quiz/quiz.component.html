@@ -11,7 +11,7 @@
           class="meta-pill difficulty-badge"
           [ngClass]="'difficulty-' + question.difficulty"
         >
-          {{ question.difficulty }}
+          {{ getDifficultyLabel(question.difficulty) }}
         </span>
       </div>
     </div>

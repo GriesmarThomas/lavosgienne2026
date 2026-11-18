@@ -7,6 +7,7 @@ import { from, switchMap } from 'rxjs';
 import {
   getQuestionImages,
   getCategoryIcon,
+  getDifficultyLabel,
   hasExactlyOneCorrectChoice,
   MAX_QUESTION_IMAGE_BYTES,
   MAX_QUESTION_IMAGES,
@@ -46,6 +47,7 @@ interface QuestionDraft {
 })
 export class AdminComponent implements OnInit {
   readonly getCategoryIcon = getCategoryIcon;
+  readonly getDifficultyLabel = getDifficultyLabel;
   readonly difficulties: QuestionDifficulty[] = ['easy', 'medium', 'hard'];
   readonly questionTypes: QuestionType[] = ['open', 'qcm', 'image'];
   readonly maxQuestionImages = MAX_QUESTION_IMAGES;

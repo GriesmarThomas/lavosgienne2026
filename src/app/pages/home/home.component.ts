@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
   APP_TITLE,
+  getDifficultyLabel,
   getCategoryIcon,
   getCategoryKey,
   QuestionCategory,
@@ -21,6 +22,7 @@ import { QuizService } from '../../core/services/quiz.service';
 export class HomeComponent implements OnInit {
   readonly initialCategoryLimit = 5;
   readonly appTitle = APP_TITLE;
+  readonly getDifficultyLabel = getDifficultyLabel;
   readonly getCategoryIcon = getCategoryIcon;
   readonly difficultyOptions: Array<QuizDifficulty> = this.quizService.getAvailableDifficulties();
   readonly questionCountOptions = this.quizService.getQuestionCountOptions();

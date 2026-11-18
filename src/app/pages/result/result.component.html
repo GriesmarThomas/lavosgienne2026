@@ -15,9 +15,23 @@
         class="meta-pill difficulty-badge"
         [ngClass]="'difficulty-' + currentResult.question.difficulty"
       >
-        {{ currentResult.question.difficulty }}
+        {{ getDifficultyLabel(currentResult.question.difficulty) }}
       </span>
     </div>
+
+    <section *ngIf="isFinalScreen" class="score-summary" aria-labelledby="score-summary-title">
+      <h3 id="score-summary-title">Récapitulatif de la série</h3>
+      <div class="score-stats">
+        <div class="score-stat score-correct">
+          <strong>{{ sessionScore.correct }}</strong>
+          <span>bonne{{ sessionScore.correct > 1 ? 's' : '' }} réponse{{ sessionScore.correct > 1 ? 's' : '' }}</span>
+        </div>
+        <div class="score-stat score-incorrect">
+          <strong>{{ sessionScore.incorrect }}</strong>
+          <span>mauvaise{{ sessionScore.incorrect > 1 ? 's' : '' }} réponse{{ sessionScore.incorrect > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+    </section>
 
     <div class="result-box">
       <p><strong>Bonne réponse :</strong> {{ currentResult.question.correctAnswer }}</p>

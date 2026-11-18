@@ -16,6 +16,7 @@ export interface QuizSession {
   currentIndex: number;
   difficulty: QuizDifficulty;
   count: number;
+  answerResults: Array<boolean | null>;
   lastResult?: QuizResult;
 }
 
@@ -152,6 +153,7 @@ export class QuizService {
       currentIndex: 0,
       difficulty,
       count: sessionQuestions.length,
+      answerResults: Array.from({ length: sessionQuestions.length }, () => null),
       lastResult: undefined
     };
 
@@ -164,7 +166,8 @@ export class QuizService {
       questions: [],
       currentIndex: 0,
       difficulty: 'random',
-      count: 0
+      count: 0,
+      answerResults: []
     };
 
     const storage = this.getStorage();
@@ -179,13 +182,25 @@ export class QuizService {
     }
 
     try {
-      const parsed = JSON.parse(rawValue) as QuizSession;
+      const parsed = JSON.parse(rawValue) as Partial<QuizSession>;
+      const questions = Array.isArray(parsed.questions) ? parsed.questions : defaultSession.questions;
+      const storedAnswerResults = Array.isArray(parsed.answerResults)
+        ? parsed.answerResults.slice(0, questions.length)
+        : [];
+      const answerResults = Array.from(
+        { length: questions.length },
+        (_, index) => typeof storedAnswerResults[index] === 'boolean' ? storedAnswerResults[index] : null
+      );
+
       return {
         ...defaultSession,
         ...parsed,
-        questions: Array.isArray(parsed.questions) ? parsed.questions : defaultSession.questions,
-        currentIndex: Number.isFinite(parsed.currentIndex) ? parsed.currentIndex : defaultSession.currentIndex,
-        count: Number.isFinite(parsed.count) ? parsed.count : parsed.questions?.length ?? defaultSession.count
+        questions,
+        currentIndex: typeof parsed.currentIndex === 'number' && Number.isFinite(parsed.currentIndex)
+          ? parsed.currentIndex
+          : defaultSession.currentIndex,
+        count: typeof parsed.count === 'number' && Number.isFinite(parsed.count) ? parsed.count : questions.length,
+        answerResults
       };
     } catch {
       return defaultSession;
@@ -205,6 +220,14 @@ export class QuizService {
   hasMoreQuestions(): boolean {
     const session = this.getSession();
     return session.currentIndex + 1 < session.questions.length;
+  }
+
+  getSessionScore(): { correct: number; incorrect: number } {
+    const answerResults = this.getSession().answerResults;
+    return {
+      correct: answerResults.filter((isCorrect) => isCorrect === true).length,
+      incorrect: answerResults.filter((isCorrect) => isCorrect === false).length
+    };
   }
 
   submitAnswer(selectedAnswer: string): QuizResult {
@@ -229,6 +252,7 @@ export class QuizService {
       isComplete: currentIndex >= session.questions.length - 1
     };
 
+    session.answerResults[currentIndex] = isCorrect;
     session.lastResult = result;
     this.writeJson(this.getStorage(), this.sessionKey, session);
     return result;

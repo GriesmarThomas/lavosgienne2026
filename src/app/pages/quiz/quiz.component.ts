@@ -2,7 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { getCategoryIcon, getQuestionImages, Question } from '../../core/models/question.model';
+import {
+  getCategoryIcon,
+  getDifficultyLabel,
+  getQuestionImages,
+  Question
+} from '../../core/models/question.model';
 import { QuizService } from '../../core/services/quiz.service';
 import { QuestionImagesComponent } from '../../shared/components/question-images/question-images.component';
 
@@ -15,6 +20,7 @@ import { QuestionImagesComponent } from '../../shared/components/question-images
 })
 export class QuizComponent implements OnInit {
   readonly getCategoryIcon = getCategoryIcon;
+  readonly getDifficultyLabel = getDifficultyLabel;
   currentQuestion: Question | null = null;
   currentIndex = 0;
   totalQuestions = 0;
