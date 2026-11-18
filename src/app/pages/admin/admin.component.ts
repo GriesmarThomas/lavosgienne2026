@@ -1,13 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, HostListener, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { from, switchMap } from 'rxjs';
 import {
   getQuestionImages,
+  getCategoryIcon,
+  hasExactlyOneCorrectChoice,
   MAX_QUESTION_IMAGE_BYTES,
   MAX_QUESTION_IMAGES,
+  normalizeAnswer,
   Question,
   QuestionDifficulty,
   QuestionType
@@ -26,8 +29,9 @@ interface QuestionDraft {
   type: QuestionType;
   question: string;
   correctAnswer: string;
+  choices: string[];
+  correctChoiceIndex: number | null;
   acceptedAnswersText: string;
-  choicesText: string;
   image: string;
   images: string[];
   anecdote: string;
@@ -41,6 +45,7 @@ interface QuestionDraft {
   styleUrl: './admin.component.scss'
 })
 export class AdminComponent implements OnInit {
+  readonly getCategoryIcon = getCategoryIcon;
   readonly difficulties: QuestionDifficulty[] = ['easy', 'medium', 'hard'];
   readonly questionTypes: QuestionType[] = ['open', 'qcm', 'image'];
   readonly maxQuestionImages = MAX_QUESTION_IMAGES;
@@ -100,6 +105,21 @@ export class AdminComponent implements OnInit {
     return this.previewingQuestion ? getQuestionImages(this.previewingQuestion) : [];
   }
 
+  get isQcmDraftValid(): boolean {
+    if (this.draft.type !== 'qcm') {
+      return true;
+    }
+
+    const choices = this.draft.choices.map((choice) => choice.trim());
+    const correctAnswer = choices[this.draft.correctChoiceIndex ?? -1] ?? '';
+
+    return hasExactlyOneCorrectChoice({
+      type: 'qcm',
+      choices,
+      correctAnswer
+    });
+  }
+
   login(): void {
     this.errorMessage = '';
     this.isSaving = true;
@@ -144,14 +164,18 @@ export class AdminComponent implements OnInit {
     this.clearSelectedPhotos();
     this.isEditorOpen = true;
     this.editingId = question.id;
+    const choices = question.choices ?? [];
     this.draft = {
       category: question.category,
       difficulty: question.difficulty,
       type: question.type,
       question: question.question,
       correctAnswer: question.correctAnswer,
+      choices: [...choices],
+      correctChoiceIndex: question.type === 'qcm'
+        ? choices.findIndex((choice) => normalizeAnswer(choice) === normalizeAnswer(question.correctAnswer))
+        : null,
       acceptedAnswersText: (question.acceptedAnswers ?? []).join('\n'),
-      choicesText: (question.choices ?? []).join('\n'),
       image: question.image ?? '',
       images: question.images ?? [],
       anecdote: question.anecdote ?? ''
@@ -179,6 +203,23 @@ export class AdminComponent implements OnInit {
 
   setQuestionImageOpen(isOpen: boolean): void {
     this.isQuestionImageOpen = isOpen;
+  }
+
+  addChoice(): void {
+    this.draft.choices.push('');
+  }
+
+  trackChoiceIndex(index: number): number {
+    return index;
+  }
+
+  removeChoice(index: number): void {
+    this.draft.choices.splice(index, 1);
+    if (this.draft.correctChoiceIndex === index) {
+      this.draft.correctChoiceIndex = null;
+    } else if (this.draft.correctChoiceIndex !== null && this.draft.correctChoiceIndex > index) {
+      this.draft.correctChoiceIndex -= 1;
+    }
   }
 
   onPhotosSelected(event: Event): void {
@@ -225,9 +266,44 @@ export class AdminComponent implements OnInit {
     this.resetEditor();
   }
 
-  saveQuestion(): void {
+  saveQuestion(form: NgForm): void {
     this.errorMessage = '';
     this.successMessage = '';
+    if (!this.draft.category.trim()) {
+      form.control.markAllAsTouched();
+      this.errorMessage = 'La catégorie est obligatoire.';
+      this.scrollToTop();
+      return;
+    }
+
+    if (!this.draft.question.trim()) {
+      form.control.markAllAsTouched();
+      this.errorMessage = 'L’énoncé de la question est obligatoire.';
+      this.scrollToTop();
+      return;
+    }
+
+    if (!this.isQcmDraftValid) {
+      form.control.markAllAsTouched();
+      this.errorMessage = 'Un QCM doit proposer au moins deux réponses distinctes et une seule bonne réponse.';
+      this.scrollToTop();
+      return;
+    }
+
+    if (this.draft.type !== 'qcm' && !this.draft.correctAnswer.trim()) {
+      form.control.markAllAsTouched();
+      this.errorMessage = 'La bonne réponse est obligatoire.';
+      this.scrollToTop();
+      return;
+    }
+
+    if (form.invalid) {
+      form.control.markAllAsTouched();
+      this.errorMessage = 'Vérifie les champs obligatoires avant d’enregistrer.';
+      this.scrollToTop();
+      return;
+    }
+
     this.isSaving = true;
 
     const questionData = this.buildQuestionData();
@@ -244,11 +320,13 @@ export class AdminComponent implements OnInit {
         this.isSaving = false;
         this.successMessage = isNewQuestion ? 'Question ajoutée.' : 'Question modifiée.';
         this.resetEditor();
+        this.scrollToTop();
         this.loadQuestions();
       },
       error: (error: unknown) => {
         this.isSaving = false;
         this.errorMessage = this.getErrorMessage(error, 'Impossible d’enregistrer la question.');
+        this.scrollToTop();
       }
     });
   }
@@ -263,12 +341,18 @@ export class AdminComponent implements OnInit {
     this.adminService.deleteQuestion(question.id).subscribe({
       next: () => {
         this.successMessage = 'Question supprimée.';
+        this.scrollToTop();
         this.loadQuestions();
       },
       error: (error: unknown) => {
         this.errorMessage = this.getErrorMessage(error, 'Impossible de supprimer la question.');
+        this.scrollToTop();
       }
     });
+  }
+
+  private scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   private loadQuestions(): void {
@@ -290,16 +374,18 @@ export class AdminComponent implements OnInit {
       difficulty: this.draft.difficulty,
       type: this.draft.type,
       question: this.draft.question.trim(),
-      correctAnswer: this.draft.correctAnswer.trim()
+      correctAnswer: this.draft.type === 'qcm'
+        ? this.draft.choices[this.draft.correctChoiceIndex ?? -1]?.trim() ?? ''
+        : this.draft.correctAnswer.trim()
     };
     const acceptedAnswers = this.toLines(this.draft.acceptedAnswersText);
-    const choices = this.toLines(this.draft.choicesText);
+    const choices = this.draft.choices.map((choice) => choice.trim());
 
-    if (acceptedAnswers.length) {
+    if (this.draft.type !== 'qcm' && acceptedAnswers.length) {
       question.acceptedAnswers = acceptedAnswers;
     }
 
-    if (choices.length) {
+    if (this.draft.type === 'qcm') {
       question.choices = choices;
     }
 
@@ -329,8 +415,9 @@ export class AdminComponent implements OnInit {
       type: 'open',
       question: '',
       correctAnswer: '',
+      choices: [],
+      correctChoiceIndex: null,
       acceptedAnswersText: '',
-      choicesText: '',
       image: '',
       images: [],
       anecdote: ''

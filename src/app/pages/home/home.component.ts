@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { APP_TITLE, QuizDifficulty } from '../../core/models/question.model';
+import { APP_TITLE, getCategoryIcon, QuizDifficulty } from '../../core/models/question.model';
 import { QuizService } from '../../core/services/quiz.service';
 
 @Component({
@@ -12,13 +12,18 @@ import { QuizService } from '../../core/services/quiz.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   readonly appTitle = APP_TITLE;
+  readonly getCategoryIcon = getCategoryIcon;
   readonly difficultyOptions: Array<QuizDifficulty> = this.quizService.getAvailableDifficulties();
   readonly questionCountOptions = this.quizService.getQuestionCountOptions();
 
   selectedDifficulty: QuizDifficulty = this.quizService.getSavedConfig().difficulty;
+  selectedCategory: string | null = this.quizService.getSavedConfig().category;
   questionCount = this.quizService.getSavedConfig().questionCount;
+  categoryOptions: string[] = [];
+  isLoadingCategories = true;
+  categoryErrorMessage = '';
   isStarting = false;
   errorMessage = '';
 
@@ -29,6 +34,10 @@ export class HomeComponent {
     if (!this.questionCountOptions.includes(this.questionCount)) {
       this.questionCount = this.questionCountOptions[0];
     }
+  }
+
+  ngOnInit(): void {
+    void this.loadCategories();
   }
 
   decrementQuestionCount(): void {
@@ -43,12 +52,20 @@ export class HomeComponent {
   async startGame(): Promise<void> {
     this.isStarting = true;
     this.errorMessage = '';
-    this.quizService.saveConfig(this.selectedDifficulty, this.questionCount);
+    this.quizService.saveConfig(this.selectedDifficulty, this.questionCount, this.selectedCategory);
 
     try {
-      const questions = await this.quizService.startSession(this.selectedDifficulty, this.questionCount);
+      const questions = await this.quizService.startSession(
+        this.selectedDifficulty,
+        this.questionCount,
+        this.selectedCategory
+      );
       if (!questions.length) {
-        this.errorMessage = 'Aucune question disponible pour cette difficulté.';
+        this.errorMessage = this.selectedCategory && this.selectedDifficulty !== 'random'
+          ? 'Aucune question disponible pour cette catégorie et cette difficulté.'
+          : this.selectedCategory
+            ? 'Aucune question disponible pour cette catégorie.'
+            : 'Aucune question disponible pour cette difficulté.';
         return;
       }
 
@@ -58,6 +75,21 @@ export class HomeComponent {
       this.errorMessage = 'Impossible de charger les questions. Réessaie dans un instant.';
     } finally {
       this.isStarting = false;
+    }
+  }
+
+  private async loadCategories(): Promise<void> {
+    try {
+      this.categoryOptions = await this.quizService.getAvailableCategories();
+      if (this.selectedCategory && !this.categoryOptions.includes(this.selectedCategory)) {
+        this.selectedCategory = null;
+      }
+    } catch (error) {
+      console.error('Unable to load question categories:', error);
+      this.selectedCategory = null;
+      this.categoryErrorMessage = 'Impossible de charger les catégories.';
+    } finally {
+      this.isLoadingCategories = false;
     }
   }
 }

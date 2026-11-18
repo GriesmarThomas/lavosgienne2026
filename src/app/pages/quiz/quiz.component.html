@@ -3,8 +3,16 @@
     <div class="top-bar">
       <span class="progress">Question {{ currentIndex + 1 }} / {{ totalQuestions }}</span>
       <div class="meta-row">
-        <span class="meta-pill">{{ question.category }}</span>
-        <span class="meta-pill">{{ question.difficulty }}</span>
+        <span class="meta-pill category-pill">
+          <span class="category-icon" aria-hidden="true">{{ getCategoryIcon(question.category) }}</span>
+          {{ question.category }}
+        </span>
+        <span
+          class="meta-pill difficulty-badge"
+          [ngClass]="'difficulty-' + question.difficulty"
+        >
+          {{ question.difficulty }}
+        </span>
       </div>
     </div>
 

@@ -7,7 +7,7 @@
 
 .quiz-card {
   width: min(100%, 540px);
-  background: rgba(15, 23, 42, 0.82);
+  background: var(--card);
   border: 1px solid var(--card-border);
   border-radius: 28px;
   padding: 1.25rem;
@@ -38,8 +38,8 @@
 .meta-pill {
   display: inline-flex;
   align-items: center;
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
   border-radius: 999px;
   padding: 0.45rem 0.75rem;
   font-size: 0.75rem;
@@ -65,9 +65,9 @@ h2 {
 
 .answer-box input {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--surface-border);
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--input-bg);
   color: var(--text);
   padding: 0.9rem 1rem;
 }
@@ -81,16 +81,16 @@ h2 {
 .choice-button {
   padding: 0.9rem 1rem;
   border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid var(--surface-border);
+  background: var(--surface);
   color: var(--text);
   text-align: left;
   cursor: pointer;
 }
 
 .choice-button.selected {
-  background: rgba(255, 183, 3, 0.18);
-  border-color: rgba(255, 183, 3, 0.8);
+  background: var(--primary-soft);
+  border-color: var(--primary-border);
 }
 
 .image-area {
@@ -100,7 +100,7 @@ h2 {
 .image-area img {
   width: 100%;
   border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--surface-border);
   object-fit: cover;
 }
 
@@ -109,8 +109,8 @@ h2 {
   place-items: center;
   min-height: 180px;
   border-radius: 18px;
-  background: rgba(148, 163, 184, 0.08);
-  border: 1px dashed rgba(148, 163, 184, 0.35);
+  background: var(--surface);
+  border: 1px dashed var(--surface-border);
   color: var(--muted);
 }
 
@@ -120,7 +120,7 @@ h2 {
   border: none;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-  color: #111827;
+  color: var(--button-text);
   font-weight: 800;
   padding: 1rem;
   cursor: pointer;

@@ -19,6 +19,8 @@ Ouvrir `/admin` et se connecter avec le compte configuré dans les variables d�
 - `ADMIN_SESSION_SECRET` : clé aléatoire dédiée à la signature de session
 - `BLOB_READ_WRITE_TOKEN` : ajouté automatiquement lorsque le Blob privé est relié au projet
 
+Pour une question de type QCM, ajouter au moins deux réponses distinctes et sélectionner l’unique bonne réponse. Cette règle est vérifiée à l’enregistrement.
+
 Ne pas enregistrer de mot de passe dans le code ou dans le dépôt. Les sessions utilisent un cookie `HttpOnly` limité à 8 heures ; l’API vérifie l’authentification avant toute lecture ou modification réservée à l’admin.
 
 ## Développement et déploiement

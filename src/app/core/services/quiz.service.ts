@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Question, QuizDifficulty } from '../models/question.model';
+import { normalizeAnswer, Question, QuizDifficulty } from '../models/question.model';
 import { Punishment, PunishmentService } from './punishment.service';
 
 export interface QuizSession {
@@ -40,8 +40,8 @@ export class QuizService {
     return [5, 8, 10, 12];
   }
 
-  getSavedConfig(): { difficulty: QuizDifficulty; questionCount: number } {
-    const defaultValue = { difficulty: 'random' as QuizDifficulty, questionCount: 5 };
+  getSavedConfig(): { difficulty: QuizDifficulty; category: string | null; questionCount: number } {
+    const defaultValue = { difficulty: 'random' as QuizDifficulty, category: null, questionCount: 5 };
     const storage = this.getStorage();
 
     if (!storage) {
@@ -55,20 +55,27 @@ export class QuizService {
     }
 
     try {
-      const parsed = JSON.parse(rawValue) as Partial<{ difficulty: QuizDifficulty; questionCount: number }>;
+      const parsed = JSON.parse(rawValue) as Partial<{
+        difficulty: QuizDifficulty;
+        category: string | null;
+        questionCount: number;
+      }>;
       const difficulty = this.isValidDifficulty(parsed.difficulty) ? parsed.difficulty : defaultValue.difficulty;
+      const category = typeof parsed.category === 'string' && parsed.category.trim()
+        ? parsed.category.trim()
+        : null;
       const validQuestionCount = this.getQuestionCountOptions();
       const questionCount = typeof parsed.questionCount === 'number' && validQuestionCount.includes(parsed.questionCount)
         ? parsed.questionCount
         : defaultValue.questionCount;
 
-      return { difficulty, questionCount };
+      return { difficulty, category, questionCount };
     } catch {
       return defaultValue;
     }
   }
 
-  saveConfig(difficulty: QuizDifficulty, questionCount: number): void {
+  saveConfig(difficulty: QuizDifficulty, questionCount: number, category: string | null = null): void {
     const storage = this.getStorage();
     if (!storage) {
       return;
@@ -79,17 +86,32 @@ export class QuizService {
     const safeQuestionCount = validQuestionCount.includes(questionCount)
       ? questionCount
       : validQuestionCount[0];
+    const safeCategory = typeof category === 'string' && category.trim() ? category.trim() : null;
 
-    this.writeJson(storage, this.configKey, { difficulty: safeDifficulty, questionCount: safeQuestionCount });
+    this.writeJson(storage, this.configKey, {
+      difficulty: safeDifficulty,
+      category: safeCategory,
+      questionCount: safeQuestionCount
+    });
   }
 
-  async startSession(difficulty: QuizDifficulty, count: number): Promise<Question[]> {
+  async getAvailableCategories(): Promise<string[]> {
     const questions = await firstValueFrom(this.http.get<Question[]>('/api/questions'));
     if (!Array.isArray(questions)) {
       throw new Error('La banque de questions reçue est invalide.');
     }
 
-    const sessionQuestions = this.buildQuestionSet(questions, difficulty, count);
+    return [...new Set(questions.map((question) => question.category.trim()).filter(Boolean))]
+      .sort((left, right) => left.localeCompare(right, 'fr'));
+  }
+
+  async startSession(difficulty: QuizDifficulty, count: number, category: string | null = null): Promise<Question[]> {
+    const questions = await firstValueFrom(this.http.get<Question[]>('/api/questions'));
+    if (!Array.isArray(questions)) {
+      throw new Error('La banque de questions reçue est invalide.');
+    }
+
+    const sessionQuestions = this.buildQuestionSet(questions, difficulty, count, category);
     const session: QuizSession = {
       questions: sessionQuestions,
       currentIndex: 0,
@@ -161,9 +183,9 @@ export class QuizService {
 
     const acceptedAnswers = [currentQuestion.correctAnswer, ...(currentQuestion.acceptedAnswers ?? [])];
     const isCorrect = acceptedAnswers.some(
-      (answer) => this.normalize(answer) === this.normalize(selectedAnswer)
+      (answer) => normalizeAnswer(answer) === normalizeAnswer(selectedAnswer)
     );
-    const punishment = isCorrect ? null : this.punishmentService.generatePunishment();
+    const punishment = this.punishmentService.generatePunishment(currentQuestion.difficulty);
     const result: QuizResult = {
       question: currentQuestion,
       selectedAnswer,
@@ -207,24 +229,22 @@ export class QuizService {
     }
   }
 
-  private buildQuestionSet(questions: Question[], difficulty: QuizDifficulty, count: number): Question[] {
-    const filteredQuestions =
-      difficulty === 'random'
-        ? [...questions]
-        : questions.filter((question) => question.difficulty === difficulty);
+  private buildQuestionSet(
+    questions: Question[],
+    difficulty: QuizDifficulty,
+    count: number,
+    category: string | null
+  ): Question[] {
+    const categoryQuestions = category
+      ? questions.filter((question) => question.category === category)
+      : questions;
+    const filteredQuestions = difficulty === 'random'
+      ? [...categoryQuestions]
+      : categoryQuestions.filter((question) => question.difficulty === difficulty);
 
     const shuffledQuestions = [...filteredQuestions].sort(() => Math.random() - 0.5);
     const safeCount = Number.isFinite(count) ? Math.max(1, count) : 1;
     return shuffledQuestions.slice(0, Math.min(safeCount, shuffledQuestions.length));
-  }
-
-  private normalize(value: string): string {
-    return value
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]/g, '');
   }
 
   private getStorage(): Storage | null {

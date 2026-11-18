@@ -83,9 +83,9 @@ h2 {
 .admin-card textarea {
   width: 100%;
   padding: 0.75rem 0.85rem;
-  border: 1px solid rgba(148, 163, 184, 0.24);
+  border: 1px solid var(--surface-border);
   border-radius: 10px;
-  background: rgba(2, 8, 23, 0.55);
+  background: var(--input-bg);
   color: var(--text);
 }
 
@@ -114,6 +114,35 @@ h2 {
   color: #fecaca;
 }
 
+.qcm-choice-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.qcm-choice-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-card .qcm-correct-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.admin-card .qcm-correct-choice input {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--primary);
+}
+
 .selected-photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -126,7 +155,7 @@ h2 {
   padding: 0.5rem;
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  background: rgba(148, 163, 184, 0.05);
+  background: var(--surface);
 }
 
 .selected-photo img {
@@ -152,11 +181,11 @@ h2 {
 
 .primary-button {
   background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-  color: #111827;
+  color: var(--button-text);
 }
 
 .secondary-button {
-  background: rgba(255, 183, 3, 0.16);
+  background: var(--primary-soft);
   color: var(--primary);
 }
 
@@ -192,7 +221,7 @@ button:disabled {
   padding: 1.25rem;
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  background: rgba(2, 8, 23, 0.32);
+  background: var(--surface);
 }
 
 .form-grid {
@@ -235,7 +264,7 @@ button:disabled {
   padding: 1rem;
   border: 1px solid var(--card-border);
   border-radius: 14px;
-  background: rgba(148, 163, 184, 0.05);
+  background: var(--surface);
 }
 
 .question-copy h3 {
@@ -264,9 +293,13 @@ button:disabled {
 }
 
 .feedback {
-  margin: 1rem 0 0;
+  position: sticky;
+  top: 0.75rem;
+  z-index: 20;
+  margin: 0 0 1rem;
   padding: 0.8rem 1rem;
   border-radius: 10px;
+  box-shadow: var(--shadow);
 }
 
 .feedback.error {
@@ -287,7 +320,7 @@ button:disabled {
   place-items: center;
   overflow-y: auto;
   padding: 1rem;
-  background: rgba(2, 8, 23, 0.82);
+  background: rgba(9, 16, 11, 0.84);
   backdrop-filter: blur(6px);
 }
 
@@ -321,7 +354,7 @@ button:disabled {
   padding: 1.25rem;
   border: 1px solid var(--card-border);
   border-radius: 28px;
-  background: rgba(15, 23, 42, 0.82);
+  background: var(--bg-soft);
   box-shadow: var(--shadow);
 }
 
@@ -350,9 +383,9 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   padding: 0.45rem 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--surface-border);
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--surface);
   font-size: 0.75rem;
   text-transform: capitalize;
 }
@@ -377,9 +410,9 @@ button:disabled {
 .preview-answer-box input {
   width: 100%;
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--surface-border);
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--input-bg);
   color: var(--text);
 }
 
@@ -391,9 +424,9 @@ button:disabled {
 
 .preview-choice-button {
   padding: 0.9rem 1rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--surface-border);
   border-radius: 14px;
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--surface);
   color: var(--text);
   text-align: left;
 }
@@ -403,9 +436,9 @@ button:disabled {
   min-height: 180px;
   margin-top: 1rem;
   place-items: center;
-  border: 1px dashed rgba(148, 163, 184, 0.35);
+  border: 1px dashed var(--surface-border);
   border-radius: 18px;
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--surface);
   color: var(--muted);
 }
 
@@ -416,7 +449,7 @@ button:disabled {
   border: 0;
   border-radius: 16px;
   background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-  color: #111827;
+  color: var(--button-text);
   font-weight: 800;
   opacity: 0.5;
 }
@@ -437,6 +470,10 @@ button:disabled {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .qcm-choice-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .full-width {

@@ -1,15 +1,21 @@
 :root {
-  --bg: #0f172a;
-  --bg-soft: #111827;
-  --card: rgba(15, 23, 42, 0.82);
-  --card-border: rgba(148, 163, 184, 0.18);
-  --primary: #ffb703;
-  --primary-strong: #f59e0b;
-  --success: #22c55e;
-  --danger: #ef4444;
-  --text: #f8fafc;
-  --muted: #cbd5e1;
-  --shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+  --bg: #18231c;
+  --bg-soft: #26352a;
+  --card: rgba(38, 51, 40, 0.9);
+  --card-border: rgba(243, 239, 229, 0.17);
+  --surface: rgba(243, 239, 229, 0.07);
+  --surface-border: rgba(243, 239, 229, 0.15);
+  --input-bg: rgba(17, 26, 20, 0.72);
+  --primary: #d99a57;
+  --primary-strong: #f0bd78;
+  --primary-soft: rgba(217, 154, 87, 0.16);
+  --primary-border: rgba(217, 154, 87, 0.75);
+  --button-text: #1c261e;
+  --success: #86a96e;
+  --danger: #cf7665;
+  --text: #f3efe5;
+  --muted: #d0c8b7;
+  --shadow: 0 20px 40px rgba(8, 16, 10, 0.42);
 }
 
 * {
@@ -20,8 +26,10 @@ html, body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(circle at top, rgba(245, 158, 11, 0.18), transparent 35%),
-    linear-gradient(180deg, #020817 0%, #111827 100%);
+    radial-gradient(ellipse at 12% 0%, rgba(71, 102, 65, 0.42), transparent 42%),
+    radial-gradient(ellipse at 92% 18%, rgba(121, 84, 58, 0.24), transparent 38%),
+    repeating-linear-gradient(164deg, rgba(217, 154, 87, 0.018) 0 1px, transparent 1px 42px),
+    linear-gradient(180deg, #18231c 0%, #26352a 54%, #151f19 100%);
   color: var(--text);
   font-family: 'Segoe UI', Tahoma, sans-serif;
 }
@@ -37,4 +45,42 @@ button, input {
 img {
   max-width: 100%;
   display: block;
+}
+
+.difficulty-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.difficulty-badge.difficulty-easy {
+  border-color: #83b77a;
+  background: #355a37;
+  color: #e4f4d8;
+}
+
+.difficulty-badge.difficulty-medium {
+  border-color: #d6a252;
+  background: #815221;
+  color: #fff0d6;
+}
+
+.difficulty-badge.difficulty-hard {
+  border-color: #ce7468;
+  background: #7a3430;
+  color: #ffe4e0;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.category-icon {
+  line-height: 1;
 }

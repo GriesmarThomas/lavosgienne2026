@@ -8,6 +8,9 @@
       <a class="back-link" routerLink="/">Retour au quiz</a>
     </header>
 
+    <p *ngIf="errorMessage" class="feedback error" role="alert">{{ errorMessage }}</p>
+    <p *ngIf="successMessage" class="feedback success" role="status">{{ successMessage }}</p>
+
     <p *ngIf="isLoading" class="status-message">Chargement…</p>
 
     <form *ngIf="!isLoading && !isAuthenticated" class="login-form" (ngSubmit)="login()">
@@ -37,11 +40,11 @@
         </div>
       </div>
 
-      <form *ngIf="isEditorOpen" class="question-form" (ngSubmit)="saveQuestion()">
+      <form *ngIf="isEditorOpen" #questionForm="ngForm" class="question-form" (ngSubmit)="saveQuestion(questionForm)">
         <h2>{{ editingId === null ? 'Nouvelle question' : 'Modifier la question' }}</h2>
         <div class="form-grid">
           <div class="field">
-            <label for="question-category">Catégorie</label>
+            <label for="question-category">Catégorie (obligatoire)</label>
             <input id="question-category" name="category" [(ngModel)]="draft.category" required />
           </div>
           <div class="field">
@@ -88,17 +91,44 @@
               (lightboxOpenChange)="setQuestionImageOpen($event)"
             ></app-question-images>
           </div>
-          <div class="field full-width">
+          <div *ngIf="draft.type !== 'qcm'" class="field full-width">
             <label for="correct-answer">Bonne réponse</label>
             <input id="correct-answer" name="correctAnswer" [(ngModel)]="draft.correctAnswer" required />
           </div>
-          <div class="field full-width">
+          <div *ngIf="draft.type !== 'qcm'" class="field full-width">
             <label for="accepted-answers">Autres réponses acceptées (une par ligne)</label>
             <textarea id="accepted-answers" name="acceptedAnswers" [(ngModel)]="draft.acceptedAnswersText" rows="2"></textarea>
           </div>
           <div *ngIf="draft.type === 'qcm'" class="field full-width">
-            <label for="question-choices">Choix proposés (un par ligne)</label>
-            <textarea id="question-choices" name="choices" [(ngModel)]="draft.choicesText" rows="3" required></textarea>
+            <label>Réponses proposées</label>
+            <p class="field-hint">Ajoute au moins deux réponses distinctes et sélectionne l’unique bonne réponse.</p>
+            <div class="qcm-choice-row" *ngFor="let choice of draft.choices; index as index; trackBy: trackChoiceIndex">
+              <input
+                [id]="'qcm-choice-' + index"
+                [name]="'qcm-choice-' + index"
+                [(ngModel)]="draft.choices[index]"
+                [attr.aria-label]="'Réponse proposée ' + (index + 1)"
+                required
+              />
+              <div class="qcm-choice-actions">
+                <label class="qcm-correct-choice" [for]="'qcm-correct-' + index">
+                  <input
+                    [id]="'qcm-correct-' + index"
+                    type="radio"
+                    name="correctChoice"
+                    [value]="index"
+                    [(ngModel)]="draft.correctChoiceIndex"
+                    required
+                  />
+                  Bonne réponse
+                </label>
+                <button type="button" class="text-button" (click)="removeChoice(index)">Retirer</button>
+              </div>
+            </div>
+            <button type="button" class="text-button" (click)="addChoice()">Ajouter une réponse</button>
+            <p *ngIf="!isQcmDraftValid" class="photo-error" role="alert">
+              Il faut au moins deux réponses distinctes et une seule bonne réponse.
+            </p>
           </div>
           <div *ngIf="draft.type === 'image'" class="field full-width">
             <label for="question-image">URL de l’image</label>
@@ -110,7 +140,7 @@
           </div>
         </div>
         <div class="form-actions">
-          <button type="submit" class="primary-button" [disabled]="isSaving || !!photoErrorMessage">
+          <button type="submit" class="primary-button" [disabled]="isSaving || !!photoErrorMessage || !isQcmDraftValid">
             {{ isSaving ? 'Enregistrement…' : 'Enregistrer' }}
           </button>
           <button type="button" class="text-button" (click)="cancelEditing()">Annuler</button>
@@ -132,8 +162,16 @@
         <article class="question-item" *ngFor="let question of filteredQuestions">
           <div class="question-copy">
             <div class="question-meta">
-              <span>{{ question.category }}</span>
-              <span>{{ question.difficulty }}</span>
+              <span class="category-pill">
+                <span class="category-icon" aria-hidden="true">{{ getCategoryIcon(question.category) }}</span>
+                {{ question.category }}
+              </span>
+              <span
+                class="difficulty-badge"
+                [ngClass]="'difficulty-' + question.difficulty"
+              >
+                {{ question.difficulty }}
+              </span>
               <span>{{ question.type }}</span>
             </div>
             <h3>{{ question.question }}</h3>
@@ -150,8 +188,6 @@
 
     </div>
 
-    <p *ngIf="errorMessage" class="feedback error" role="alert">{{ errorMessage }}</p>
-    <p *ngIf="successMessage" class="feedback success" role="status">{{ successMessage }}</p>
   </section>
 
   <div
@@ -182,8 +218,16 @@
         <div class="preview-top-bar">
           <span class="preview-progress">Question 1 / 1</span>
           <div class="preview-meta-row">
-            <span class="preview-meta-pill">{{ question.category }}</span>
-            <span class="preview-meta-pill">{{ question.difficulty }}</span>
+            <span class="preview-meta-pill category-pill">
+              <span class="category-icon" aria-hidden="true">{{ getCategoryIcon(question.category) }}</span>
+              {{ question.category }}
+            </span>
+            <span
+              class="preview-meta-pill difficulty-badge"
+              [ngClass]="'difficulty-' + question.difficulty"
+            >
+              {{ question.difficulty }}
+            </span>
           </div>
         </div>
 

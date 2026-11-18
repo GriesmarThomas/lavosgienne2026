@@ -1,5 +1,8 @@
 import { get, put } from '@vercel/blob';
-import type { Question } from '../src/app/core/models/question.model.js';
+import {
+  hasExactlyOneCorrectChoice,
+  type Question
+} from '../src/app/core/models/question.model.js';
 import questionsData from '../src/assets/questions/questions.json' with { type: 'json' };
 
 const questionBankPath = 'questions.json';

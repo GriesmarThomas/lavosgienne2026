@@ -11,9 +11,9 @@
   min-height: 120px;
   place-items: center;
   padding: 0.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--surface-border);
   border-radius: 14px;
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--surface);
   cursor: zoom-in;
 }
 
@@ -31,7 +31,7 @@
   display: grid;
   place-items: center;
   padding: 1rem;
-  background: rgba(2, 8, 23, 0.92);
+  background: rgba(9, 16, 11, 0.92);
   backdrop-filter: blur(6px);
 }
 
@@ -59,7 +59,7 @@
   padding: 0.65rem 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.88);
+  background: var(--card);
   color: var(--text);
   cursor: pointer;
 }

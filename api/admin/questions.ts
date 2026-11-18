@@ -14,7 +14,10 @@ import {
   questionImageIdFromUrl,
   uploadQuestionImages
 } from '../../server/question-images.js';
-import type { Question } from '../../src/app/core/models/question.model.js';
+import {
+  hasExactlyOneCorrectChoice,
+  type Question
+} from '../../src/app/core/models/question.model.js';
 
 export const config = {
   api: {
@@ -60,7 +63,7 @@ export default async function handler(
       delete questionBody.photoUploads;
       const id = Math.max(0, ...bank.questions.map((question) => question.id)) + 1;
       const question = parseQuestion({ ...questionBody, id });
-      if (!question) {
+      if (!question || !hasExactlyOneCorrectChoice(question)) {
         return response.status(400).json({ error: 'Les champs de la question sont invalides.' });
       }
 
@@ -89,7 +92,7 @@ export default async function handler(
       const bank = await loadQuestionBank();
       const body = parseRequestBody(request.body);
       const question = parseQuestion(body);
-      if (!question) {
+      if (!question || !hasExactlyOneCorrectChoice(question)) {
         return response.status(400).json({ error: 'Les champs de la question sont invalides.' });
       }
 

@@ -6,15 +6,28 @@
     <h2 *ngIf="!isFinalScreen && currentResult.isCorrect">✅ Bonne réponse</h2>
     <h2 *ngIf="!isFinalScreen && !currentResult.isCorrect">❌ Mauvaise réponse</h2>
 
+    <div class="result-meta">
+      <span class="meta-pill category-pill">
+        <span class="category-icon" aria-hidden="true">{{ getCategoryIcon(currentResult.question.category) }}</span>
+        {{ currentResult.question.category }}
+      </span>
+      <span
+        class="meta-pill difficulty-badge"
+        [ngClass]="'difficulty-' + currentResult.question.difficulty"
+      >
+        {{ currentResult.question.difficulty }}
+      </span>
+    </div>
+
     <div class="result-box">
       <p><strong>Bonne réponse :</strong> {{ currentResult.question.correctAnswer }}</p>
       <p *ngIf="currentResult.question.anecdote"><strong>Anecdote :</strong> {{ currentResult.question.anecdote }}</p>
     </div>
 
-    <div *ngIf="!currentResult.isCorrect && currentResult.punishment" class="punishment-box">
+    <div *ngIf="currentResult.punishment" class="punishment-box" [class.punishment-to-share]="currentResult.isCorrect">
       <div class="punishment-icon">{{ currentResult.punishment.emoji }}</div>
       <div>
-        <strong>Gage</strong>
+        <strong>{{ currentResult.isCorrect ? 'Gage à distribuer' : 'Gage' }}</strong>
         <p>{{ currentResult.punishment.label }}</p>
       </div>
     </div>

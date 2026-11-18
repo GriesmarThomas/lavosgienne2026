@@ -5,18 +5,49 @@
     <p class="subtitle">Des souvenirs, des schlouks et des sauces</p>
 
     <div class="field-group">
-      <label for="difficulty">Difficulté</label>
-      <div class="chip-row" id="difficulty">
+      <label>Difficulté</label>
+      <div class="chip-row difficulty-options" role="group" aria-label="Difficulté">
         <button
           type="button"
           *ngFor="let option of difficultyOptions"
           class="chip"
+          [ngClass]="option === 'random' ? '' : 'difficulty-badge difficulty-' + option"
           [class.active]="selectedDifficulty === option"
+          [attr.aria-pressed]="selectedDifficulty === option"
           (click)="selectedDifficulty = option"
         >
           {{ option === 'random' ? 'Aléatoire' : option }}
         </button>
       </div>
+    </div>
+
+    <div class="field-group">
+      <label>Catégorie</label>
+      <div class="chip-row category-options" role="group" aria-label="Catégorie">
+        <button
+          type="button"
+          class="chip category-chip"
+          [class.active]="selectedCategory === null"
+          [attr.aria-pressed]="selectedCategory === null"
+          (click)="selectedCategory = null"
+        >
+          <span aria-hidden="true">🗂️</span>
+          Toutes
+        </button>
+        <button
+          type="button"
+          *ngFor="let category of categoryOptions"
+          class="chip category-chip"
+          [class.active]="selectedCategory === category"
+          [attr.aria-pressed]="selectedCategory === category"
+          (click)="selectedCategory = category"
+        >
+          <span aria-hidden="true">{{ getCategoryIcon(category) }}</span>
+          {{ category }}
+        </button>
+      </div>
+      <p *ngIf="isLoadingCategories" class="field-hint">Chargement des catégories…</p>
+      <p *ngIf="categoryErrorMessage" class="error-message" role="status">{{ categoryErrorMessage }}</p>
     </div>
 
     <div class="field-group">
@@ -28,7 +59,7 @@
       </div>
     </div>
 
-    <button type="button" class="cta-button" (click)="startGame()" [disabled]="isStarting">
+    <button type="button" class="cta-button" (click)="startGame()" [disabled]="isStarting || isLoadingCategories">
       {{ isStarting ? 'Chargement…' : 'Commencer' }}
     </button>
     <p *ngIf="errorMessage" class="error-message" role="alert">{{ errorMessage }}</p>

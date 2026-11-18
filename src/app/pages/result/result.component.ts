@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { getCategoryIcon } from '../../core/models/question.model';
 import { QuizResult, QuizService } from '../../core/services/quiz.service';
 
 @Component({
@@ -11,6 +12,7 @@ import { QuizResult, QuizService } from '../../core/services/quiz.service';
   styleUrl: './result.component.scss'
 })
 export class ResultComponent implements OnInit {
+  readonly getCategoryIcon = getCategoryIcon;
   result: QuizResult | null = null;
   isFinalScreen = false;
 
