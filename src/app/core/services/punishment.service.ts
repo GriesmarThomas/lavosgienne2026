@@ -4,7 +4,7 @@ import type { QuestionDifficulty } from '../models/question.model';
 export interface Punishment {
   emoji: string;
   label: string;
-  type: 'drink' | 'sauce' | 'snack';
+  type: 'drink' | 'sauce';
 }
 
 @Injectable({
@@ -14,7 +14,6 @@ export class PunishmentService {
   private readonly punishments: Record<QuestionDifficulty, Punishment[]> = {
     easy: [
       { emoji: '🍺', label: 'Un schlouk de bière sans alcool', type: 'drink' },
-      { emoji: '🥨', label: 'Une petite bouchée de snack au choix', type: 'snack' },
       { emoji: '🌶️', label: 'Une sauce légère', type: 'sauce' }
     ],
     medium: [
@@ -26,7 +25,7 @@ export class PunishmentService {
       { emoji: '🍺', label: '4 schlouks de bière sans alcool', type: 'drink' },
       { emoji: '🍺', label: '5 schlouks de bière sans alcool', type: 'drink' },
       { emoji: '🌶️', label: 'Une petite quantité de sauce piquante', type: 'sauce' },
-      { emoji: '🥤', label: 'Un verre de boisson sans alcool, à ton rythme', type: 'drink' }
+      { emoji: '🥤', label: 'Tout le verre sans alcool, à ton rythme', type: 'drink' }
     ]
   };
 
