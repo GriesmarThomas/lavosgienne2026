@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import {
   getCategoryKey,
-  normalizeAnswer,
+  isAnswerCorrect,
   Question,
   QuestionCategory,
   QuizDifficulty,
@@ -239,10 +239,7 @@ export class QuizService {
       throw new Error('Aucune question disponible');
     }
 
-    const acceptedAnswers = [currentQuestion.correctAnswer, ...(currentQuestion.acceptedAnswers ?? [])];
-    const isCorrect = acceptedAnswers.some(
-      (answer) => normalizeAnswer(answer) === normalizeAnswer(selectedAnswer)
-    );
+    const isCorrect = isAnswerCorrect(currentQuestion, selectedAnswer);
     const punishment = this.punishmentService.generatePunishment(currentQuestion.difficulty);
     const result: QuizResult = {
       question: currentQuestion,
